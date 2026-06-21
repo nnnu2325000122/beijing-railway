@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>北京铁路枢纽与城市辐射力分析</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.29/"></script>
+    <style>
+        html, body, #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+        #title {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: bold;
+            z-index: 99;
+            font-family: "Microsoft YaHei", sans-serif;
+            letter-spacing: 2px;
+            pointer-events: none;
+            text-align: center;
+            white-space: nowrap;
+        }
+        #legend {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            font-size: 13px;
+            z-index: 99;
+            font-family: "Microsoft YaHei", sans-serif;
+            max-width: 220px;
+        }
+        #legend h4 {
+            margin: 0 0 6px 0;
+            font-size: 14px;
+        }
+        #legend .item {
+            display: flex;
+            align-items: center;
+            margin: 3px 0;
+        }
+        #legend .color {
+            width: 20px;
+            height: 10px;
+            margin-right: 8px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .esri-popup__content {
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        @media (max-width: 600px) {
+            #title {
+                font-size: 14px;
+                padding: 8px 12px;
+                top: 10px;
+                white-space: normal;
+            }
+            #legend {
+                font-size: 11px;
+                padding: 8px 10px;
+                bottom: 15px;
+                right: 10px;
+                max-width: 170px;
+            }
+        }
+    </style>
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/WebTileLayer",
+            "esri/layers/FeatureLayer",
+            "esri/widgets/Legend",
+            "esri/widgets/Expand",
+            "esri/widgets/Home",
+            "esri/widgets/Search"
+        ], function(
+            Map, MapView,
+            WebTileLayer, FeatureLayer,
+            Legend, Expand,
+            Home, Search
+        ) {
+
+            // ================================================================
+            // 一、图层 URL（已全部替换为你的实际地址）
+            // ================================================================
+
+            // 铁路轨道（你刚刚发布的）
+            var RAILWAY_URL =
+                "https://services8.arcgis.com/HOpNJOCGcy3Gi8RS/arcgis/rest/services/%E5%8C%97%E4%BA%AC%E5%B8%82%E9%93%81%E8%B7%AF%E8%BD%A8%E9%81%93/FeatureServer";
+
+            // 4 类 POI（你之前发布的）
+            var POI_TRAFFIC_URL =
+                "https://services8.arcgis.com/HOpNJOCGcy3Gi8RS/arcgis/rest/services/%E5%8C%97%E4%BA%AC%E4%BA%A4%E9%80%9A%E8%AE%BE%E6%96%BD%E6%9C%8D%E5%8A%A1/FeatureServer";
+
+            var POI_MEDICAL_URL =
+                "https://services8.arcgis.com/HOpNJOCGcy3Gi8RS/arcgis/rest/services/%E5%8C%97%E4%BA%AC%E5%8C%BB%E7%96%97%E4%BF%9D%E5%81%A5%E6%9C%8D%E5%8A%A1/FeatureServer";
+
+            var POI_GOVERNMENT_URL =
+                "https://services8.arcgis.com/HOpNJOCGcy3Gi8RS/arcgis/rest/services/%E5%8C%97%E4%BA%AC%E5%8F%8A%E7%A4%BE%E4%BC%9A%E5%9B%A2%E4%BD%93/FeatureServer";
+
+            var POI_EDUCATION_URL =
+                "https://services8.arcgis.com/HOpNJOCGcy3Gi8RS/arcgis/rest/services/%E5%8C%97%E4%BA%AC%E7%A7%91%E6%95%99%E6%96%87%E5%8C%96%E6%9C%8D%E5%8A%A1/FeatureServer";
+
+            // ================================================================
+            // 二、创建地图（使用 OSM 底图，国内无需科学上网）
+            // ================================================================
+
+            var osmLayer = new WebTileLayer({
+                urlTemplate: "https://{subDomain}.tile.openstreetmap.org/{level}/{col}/{row}.png",
+                subDomains: ["a", "b", "c"],
+                attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> 贡献者'
+            });
+
+            var map = new Map({
+                layers: [osmLayer]
+            });
+
+            // ================================================================
+            // 三、加载铁路轨道图层
+            // ================================================================
+
+            var railwayLayer = new FeatureLayer({
+                url: RAILWAY_URL,
+                title: "铁路轨道",
+                renderer: {
+                    type: "simple",
+                    symbol: {
+                        type: "simple-line",
+                        color: [60, 60, 60, 0.9],
+                        width: 2.5
+                    }
+                },
+                popupTemplate: {
+                    title: "🚄 铁路线",
+                    content: "名称: {name}<br>类型: {type}"
+                }
+            });
+            map.add(railwayLayer);
+
+            // ================================================================
+            // 四、加载 4 类 POI
+            // ================================================================
+
+            var poiConfigs = [{
+                url: POI_TRAFFIC_URL,
+                title: "交通设施",
+                color: [0, 112, 255, 0.8]
+            }, {
+                url: POI_MEDICAL_URL,
+                title: "医疗保健",
+                color: [255, 85, 0, 0.7]
+            }, {
+                url: POI_GOVERNMENT_URL,
+                title: "政府机构",
+                color: [255, 190, 0, 0.7]
+            }, {
+                url: POI_EDUCATION_URL,
+                title: "科教文化",
+                color: [0, 168, 81, 0.7]
+            }];
+
+            poiConfigs.forEach(function(cfg) {
+                var layer = new FeatureLayer({
+                    url: cfg.url,
+                    title: cfg.title,
+                    opacity: 0.8,
+                    renderer: {
+                        type: "simple",
+                        symbol: {
+                            type: "simple-marker",
+                            color: cfg.color,
+                            size: 7,
+                            outline: {
+                                color: [255, 255, 255],
+                                width: 0.8
+                            }
+                        }
+                    },
+                    popupTemplate: {
+                        title: "📍 {name}",
+                        content: "地址: {address}<br>类别: {type}"
+                    }
+                });
+                map.add(layer);
+            });
+
+            // ================================================================
+            // 五、设置地图视图（聚焦北京）
+            // ================================================================
+
+            var view = new MapView({
+                container: "viewDiv",
+                map: map,
+                center: [116.40, 39.90],
+                zoom: 11
+            });
+
+            // ================================================================
+            // 六、添加界面控件（图例、主页、搜索）
+            // ================================================================
+
+            var legend = new Legend({
+                view: view
+            });
+            var legendExpand = new Expand({
+                view: view,
+                content: legend,
+                expandIconClass: "esri-icon-layer-list"
+            });
+            view.ui.add(legendExpand, "top-right");
+
+            var homeBtn = new Home({
+                view: view
+            });
+            view.ui.add(homeBtn, "top-left");
+
+            var search = new Search({
+                view: view
+            });
+            view.ui.add(search, "top-left");
+
+            // 控制台输出成功信息
+            console.log("✅ 北京铁路枢纽与城市辐射力分析已加载！");
+            console.log("📌 包含图层：铁路轨道 + 交通设施 + 医疗保健 + 政府机构 + 科教文化");
+            console.log("💡 点击任意 POI 点可查看详细信息");
+
+        });
+    </script>
+</head>
+<body>
+    <div id="viewDiv"></div>
+    <div id="title">🚄 北京铁路枢纽与城市辐射力分析</div>
+    <div id="legend">
+        <h4>📊 图例</h4>
+        <div class="item"><span class="color" style="background:#3C3C3C;"></span> 铁路轨道</div>
+        <div class="item"><span class="color" style="background:#0070FF;"></span> 交通设施 POI</div>
+        <div class="item"><span class="color" style="background:#FF5500;"></span> 医疗保健 POI</div>
+        <div class="item"><span class="color" style="background:#FFBE00;"></span> 政府机构 POI</div>
+        <div class="item"><span class="color" style="background:#00A851;"></span> 科教文化 POI</div>
+        <div style="margin-top:6px; font-size:11px; color:#888; border-top:1px solid #eee; padding-top:4px;">
+            💡 点击 POI 点查看详情<br>底图：OpenStreetMap
+        </div>
+    </div>
+</body>
+</html>
