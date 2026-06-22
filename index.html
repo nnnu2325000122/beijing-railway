@@ -97,14 +97,14 @@
         ) {
 
             // ================================================================
-            // 一、图层 URL（已全部替换为你的实际地址）
+            // 一、图层 URL（铁路已替换为最新地址）
             // ================================================================
 
-            // 铁路轨道（你刚刚发布的）
+            // 铁路轨道（最新发布，坐标系已修正为 WGS 1984）
             var RAILWAY_URL =
-                "https://services8.arcgis.com/HOpNJOCGcy3Gi8RS/arcgis/rest/services/%E5%8C%97%E4%BA%AC%E5%B8%82%E9%93%81%E8%B7%AF%E8%BD%A8%E9%81%93/FeatureServer";
+                "https://services8.arcgis.com/HOpNJOCGcy3Gi8RS/arcgis/rest/services/%E5%8C%97%E4%BA%AC%E5%B8%82%E7%9A%84%E9%93%81%E8%B7%AF%E8%BD%A8%E9%81%93/FeatureServer";
 
-            // 4 类 POI（你之前发布的）
+            // 4 类 POI（保持不变）
             var POI_TRAFFIC_URL =
                 "https://services8.arcgis.com/HOpNJOCGcy3Gi8RS/arcgis/rest/services/%E5%8C%97%E4%BA%AC%E4%BA%A4%E9%80%9A%E8%AE%BE%E6%96%BD%E6%9C%8D%E5%8A%A1/FeatureServer";
 
@@ -118,7 +118,7 @@
                 "https://services8.arcgis.com/HOpNJOCGcy3Gi8RS/arcgis/rest/services/%E5%8C%97%E4%BA%AC%E7%A7%91%E6%95%99%E6%96%87%E5%8C%96%E6%9C%8D%E5%8A%A1/FeatureServer";
 
             // ================================================================
-            // 二、创建地图（使用 OSM 底图，国内无需科学上网）
+            // 二、创建地图（使用 OSM 底图，HTTPS 协议，国内可直接访问）
             // ================================================================
 
             var osmLayer = new WebTileLayer({
@@ -235,11 +235,9 @@
             });
             view.ui.add(search, "top-left");
 
-            // 控制台输出成功信息
             console.log("✅ 北京铁路枢纽与城市辐射力分析已加载！");
-            console.log("📌 包含图层：铁路轨道 + 交通设施 + 医疗保健 + 政府机构 + 科教文化");
+            console.log("📌 包含图层：铁路轨道（新坐标系）+ 交通设施 + 医疗保健 + 政府机构 + 科教文化");
             console.log("💡 点击任意 POI 点可查看详细信息");
-
         });
     </script>
 </head>
@@ -254,7 +252,7 @@
         <div class="item"><span class="color" style="background:#FFBE00;"></span> 政府机构 POI</div>
         <div class="item"><span class="color" style="background:#00A851;"></span> 科教文化 POI</div>
         <div style="margin-top:6px; font-size:11px; color:#888; border-top:1px solid #eee; padding-top:4px;">
-            💡 点击 POI 点查看详情<br>底图：OpenStreetMap
+            💡 点击 POI 点查看详情<br>底图：OpenStreetMap（HTTPS）
         </div>
     </div>
 </body>
